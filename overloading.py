@@ -61,16 +61,27 @@ class Signature:
     
     #  signature
     def __str__(self) -> str:
-        return f"sig<{self.name}({', '.join(arg.__name__ for arg in self.sig)}) -> {self.return_ty.__name__ if self.return_ty else None}>"
+        return f"{self.name}({', '.join(arg.__name__ for arg in self.sig)}) -> {self.return_ty.__name__ if self.return_ty else None}"
     
     def __repr__(self) -> str:
         return str(self.sig)
 
 
 class OverloadedFunction:
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self, fn: Callable):
+        self.fn = fn
         self.map = dict()
+
+    # get signatures in a string format
+    def __str__(self) -> str:
+        """
+        Get in the format:
+        ```
+        funcName:
+            funcName(int, str)
+            funcName(str)
+        """
+        return f"{self.fn.__name__}:\n\t" + "\n\t".join(str(sig) for sig in self.map.keys())
     
     def bind(self, name: str, fn: Callable):
         signature = Signature(fn)
@@ -91,7 +102,7 @@ class OverloadedFunction:
         # get the matching function
         matchingFn = self.map.get(argsTypes, None)
         if matchingFn is None:
-            raise TypeError(f"Function {self.name} does not have matching signature")
+            raise TypeError(f"No matching function found for ({', '.join(i.__name__ for i in argsTypes)}). Valid signatures:\n{self}")
         
         # call the matching function
         return matchingFn(*args, **kwargs)
